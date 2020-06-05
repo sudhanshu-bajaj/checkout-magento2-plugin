@@ -15,6 +15,13 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
+        <log_reader>
+            <general>
+                <enable>1</enable>
+                <allow_file_deletion>1</allow_file_deletion>
+                <allow_row_deletion>0</allow_row_deletion>
+            </general>
+        </log_reader> 
         <settings>
             <checkoutcom_configuration>
                 <fields_encrypted></fields_encrypted>
