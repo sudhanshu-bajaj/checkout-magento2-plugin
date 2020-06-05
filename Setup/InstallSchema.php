@@ -54,8 +54,45 @@ class InstallSchema implements \Magento\Framework\Setup\InstallSchemaInterface
             ->addIndex($installer->getIdxName('checkoutcom_webhooks_index', ['id']), ['id'])
             ->setComment('Webhooks table');
 
-        // Create the table
+        // Define the log reader files table
+        $table2 = $installer->getConnection()
+            ->newTable($installer->getTable('checkoutcom_logreader_files'))
+            ->addColumn(
+                'file_id',
+                Table::TYPE_INTEGER,
+                null,
+                ['identity' => true, 'nullable' => false, 'primary' => true],
+                'File ID'
+            )
+            ->addColumn('is_readable', Table::TYPE_BOOLEAN, 1, [], 'Boolean')
+            ->addColumn('is_writable', Table::TYPE_BOOLEAN, 1, [], 'Boolean')
+            ->addColumn('file_path', Table::TYPE_TEXT, null, ['nullable' => true, 'default' => null])
+            ->addColumn('file_content', Table::TYPE_TEXT, null, ['nullable' => true, 'default' => null])
+            ->addColumn('rows_count', Table::TYPE_INTEGER, null, ['nullable' => false, 'default' => 0])
+            ->addColumn('file_creation_time', Table::TYPE_DATETIME, null, ['nullable' => false], 'Creation Time')
+            ->addColumn('file_update_time', Table::TYPE_DATETIME, null, ['nullable' => false], 'Update Time')
+            ->addColumn('file_override', Table::TYPE_TEXT, null, ['nullable' => true, 'default' => null])
+            ->addIndex($installer->getIdxName('logreader_file_index', ['file_id']), ['file_id']);
+
+        // Define the log reader logs table
+        $table3 = $installer->getConnection()
+            ->newTable($installer->getTable('checkoutcom_logreader_logs'))
+            ->addColumn(
+                'id',
+                Table::TYPE_INTEGER,
+                null,
+                ['identity' => true, 'nullable' => false, 'primary' => true],
+                'Record ID'
+            )
+            ->addColumn('file_id', Table::TYPE_INTEGER, null, ['nullable' => false], 'File ID')
+            ->addColumn('row_id', Table::TYPE_INTEGER, null, ['nullable' => true], 'Row ID')
+            ->addColumn('comments', Table::TYPE_TEXT, null, ['nullable' => true, 'default' => null])
+            ->addIndex($installer->getIdxName('logreader_file_index', ['id']), ['id']);
+
+        // Create the tables
         $installer->getConnection()->createTable($table1);
+        $installer->getConnection()->createTable($table2);
+        $installer->getConnection()->createTable($table3);
 
         // End the setup
         $installer->endSetup();
