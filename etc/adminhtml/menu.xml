@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Checkout.com Magento 2 Magento2 Payment.
+ *
+ * PHP version 7
+ *
+ * @category  Checkout.com
+ * @package   Magento2
+ * @author    Checkout.com Development Team <integration@checkout.com>
+ * @copyright 2019 Checkout.com all rights reserved
+ * @license   https://opensource.org/licenses/mit-license.html MIT License
+ * @link      https://www.checkout.com
+ */
+-->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Backend/etc/menu.xsd">
+    <menu>
+    	<add id="CheckoutCom_Magento2::manage" dependsOnConfig="log_reader/general/enable" title="Translation" module="CheckoutCom_Magento2" parent="Magento_Backend::content" resource="CheckoutCom_Magento2::manage" />
+        <add id="CheckoutCom_Magento2::filesindex" title="Language files" module="CheckoutCom_Magento2" dependsOnModule="CheckoutCom_Magento2" action="log_reader/files/index" parent="CheckoutCom_Magento2::manage" resource="CheckoutCom_Magento2::filesindex"/>
+        <add id="CheckoutCom_Magento2::stringsindex" title="Language strings" module="CheckoutCom_Magento2" dependsOnModule="CheckoutCom_Magento2" action="log_reader/strings/index" parent="CheckoutCom_Magento2::manage" resource="CheckoutCom_Magento2::stringsindex"/>
+        <add id="CheckoutCom_Magento2::logsindex" title="Error logs" module="CheckoutCom_Magento2" dependsOnModule="CheckoutCom_Magento2" action="log_reader/logs/index" parent="CheckoutCom_Magento2::manage" resource="CheckoutCom_Magento2::logsindex"/>
+    </menu>
+</config>
