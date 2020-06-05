@@ -1,23 +1,24 @@
 <?php
 /**
- * Naxero.com
- * Professional ecommerce integrations for Magento
+ * Checkout.com
+ * Authorized and regulated as an electronic money institution
+ * by the UK Financial Conduct Authority (FCA) under number 900816.
  *
  * PHP version 7
  *
  * @category  Magento2
- * @package   Naxero
- * @author    Platforms Development Team <contact@naxero.com>
- * @copyright Naxero.com
+ * @package   Checkout.com
+ * @author    Platforms Development Team <platforms@checkout.com>
+ * @copyright 2010-2019 Checkout.com
  * @license   https://opensource.org/licenses/mit-license.html MIT License
- * @link      https://www.naxero.com
+ * @link      https://docs.checkout.com/
  */
 
-namespace Naxero\Translation\Model;
+namespace CheckoutCom\Magento2\Model\LogReader;
 
-use Naxero\Translation\Api\Data\FileEntityInterface;
 use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\Model\AbstractModel;
+use CheckoutCom\Magento2\Api\Data\LogReader\LogEntityInterface;
 
 class FileEntity extends AbstractModel implements FileEntityInterface, IdentityInterface
 {
