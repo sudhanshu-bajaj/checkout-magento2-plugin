@@ -444,6 +444,37 @@
                     </field>
                 </group>
 
+                <group id="checkoutcom_paypal" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>PayPal Payments</label>
+                    <field id="title" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Title</label>
+                        <config_path>payment/checkoutcom_paypal/title</config_path>
+                    </field>
+                    <field id="active" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Enable PayPal</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/checkoutcom_paypal/active</config_path>
+                    </field>
+                    <field id="button_color" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Button Color</label>
+                        <source_model>CheckoutCom\Magento2\Model\Config\Backend\Source\ConfigPayPalButtonColor</source_model>
+                        <config_path>payment/checkoutcom_paypal/button_color</config_path>
+                        <comment>The PayPal place order button color</comment>
+                    </field>
+                    <field id="button_shape" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Button Shape</label>
+                        <source_model>CheckoutCom\Magento2\Model\Config\Backend\Source\ConfigPayPalButtonShape</source_model>
+                        <config_path>payment/checkoutcom_paypal/button_shape</config_path>
+                        <comment>The PayPal place order button shape</comment>
+                    </field>
+                    <field id="active" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Button Tagline</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/checkoutcom_paypal/button_tagline</config_path>
+                        <comment>Show PayPal tagline under place order button</comment>
+                    </field>
+                </group>
+
                 <group id="checkoutcom_vault" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Saved Card Payments</label>
                     <field id="active" type="select" showInDefault="1" showInWebsite="1" showInStore="1">

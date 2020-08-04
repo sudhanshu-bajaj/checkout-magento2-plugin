@@ -189,6 +189,22 @@
                 <merchant_capabilities>supportsCredit,supportsDebit</merchant_capabilities>
                 <button_style>black</button_style>
             </checkoutcom_apple_pay>
+            <checkoutcom_paypal>
+                <model>CheckoutCom\Magento2\Model\Methods\PayPalMethod</model>
+                <title>PayPal with Checkout.com</title>
+                <active>0</active>
+                <sort_order>5</sort_order>
+                <is_gateway>1</is_gateway>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_cancel>1</can_cancel>
+                <can_refund>1</can_refund>
+                <can_void>1</can_void>
+                <button_color>gold</button_color>
+                <button_shape>pill</button_shape>
+                <button_tagline>1</button_tagline>
+            </checkoutcom_paypal>
             <checkoutcom_moto>
                 <model>CheckoutCom\Magento2\Model\Methods\MotoMethod</model>
                 <title>MOTO Payments with Checkout.com</title>
