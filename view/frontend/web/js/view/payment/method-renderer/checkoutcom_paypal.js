@@ -24,7 +24,7 @@ define(
         'mage/translate',
         'paypaljs'
     ],
-    function ($, Component, Utilities, FullScreenLoader, AdditionalValidators, RedirectOnSuccessAction, __, Paypal) {
+    function ($, Component, Utilities, FullScreenLoader, AdditionalValidators, RedirectOnSuccessAction, __, PayPal) {
         'use strict';
         window.checkoutConfig.reloadOnBillingAddress = true;
         const METHOD_ID = 'checkoutcom_paypal';
@@ -81,9 +81,9 @@ define(
                     // Prepare the parameters
                     var self = this;
 
-                    Paypal.Button.render({
+                    paypal.Button.render({
                     style: {
-                        size: responsive,
+                        size: 'responsive',
                         color: checkoutConfig["checkoutcom_paypal"]["button_color"],
                         shape: checkoutConfig["checkoutcom_paypal"]["button_shape"],
                         tagline: checkoutConfig["checkoutcom_paypal"]["button_tagline"]

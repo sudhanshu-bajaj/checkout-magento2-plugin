@@ -467,7 +467,7 @@
                         <config_path>payment/checkoutcom_paypal/button_shape</config_path>
                         <comment>The PayPal place order button shape</comment>
                     </field>
-                    <field id="active" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <field id="button_tagline" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Button Tagline</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                         <config_path>payment/checkoutcom_paypal/button_tagline</config_path>
