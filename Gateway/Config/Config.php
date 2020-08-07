@@ -41,6 +41,11 @@ class Config
     public $scopeConfig;
 
     /**
+     * @var ConfigInterface
+     */
+    public $configInterface;
+
+    /**
      * @var RequestInterface
      */
     public $request;
@@ -62,6 +67,7 @@ class Config
         \Magento\Framework\View\Asset\Repository $assetRepository,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Magento\Framework\App\Config\ConfigResource\ConfigInterface $configInterface,
         \Magento\Framework\App\RequestInterface $request,
         \CheckoutCom\Magento2\Gateway\Config\Loader $loader,
         \CheckoutCom\Magento2\Helper\Utilities $utilities
@@ -69,6 +75,7 @@ class Config
         $this->assetRepository = $assetRepository;
         $this->storeManager = $storeManager;
         $this->scopeConfig = $scopeConfig;
+        $this->configInterface = $configInterface;
         $this->request = $request;
         $this->loader = $loader;
         $this->utilities = $utilities;
@@ -138,6 +145,16 @@ class Config
         return $this->scopeConfig->getValue(
             $path,
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    public function setValue($field, $value, $area = 'configuration') {
+
+        $this->configInterface->saveConfig(
+            'payment/checkoutcom_' . $area . '/' . $field,
+            $value,
+            \Magento\Framework\App\Config\ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+            \Magento\Store\Model\Store::DEFAULT_STORE_ID
         );
     }
 
