@@ -151,7 +151,7 @@ class Config
     public function setValue($field, $value, $area = 'configuration') {
 
         $this->configInterface->saveConfig(
-            'payment/checkoutcom_' . $area . '/' . $field,
+            'payment/' . $area . '/' . $field,
             $value,
             \Magento\Framework\App\Config\ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
             \Magento\Store\Model\Store::DEFAULT_STORE_ID
