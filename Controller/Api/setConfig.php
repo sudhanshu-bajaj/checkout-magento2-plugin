@@ -93,7 +93,7 @@ class setConfig extends \Magento\Framework\App\Action\Action
                     $this->config->setValue($intendedConfigField, $intendedConfigValue);
                 }
 
-                $currentConfig = $this->config->getValue($intendedConfigValue, $intendedConfigArea);
+                $currentConfig = $this->config->getValue($intendedConfigValue, $intendedConfigArea,0);
                 if($currentConfig == $intendedConfigValue) {
                     $success =  true;
                 }

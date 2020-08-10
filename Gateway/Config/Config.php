@@ -41,9 +41,9 @@ class Config
     public $scopeConfig;
 
     /**
-     * @var ConfigInterface
+     * @var configWriter
      */
-    public $configInterface;
+    public $configWriter;
 
     /**
      * @var RequestInterface
@@ -67,7 +67,7 @@ class Config
         \Magento\Framework\View\Asset\Repository $assetRepository,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \Magento\Framework\App\Config\ConfigResource\ConfigInterface $configInterface,
+        \Magento\Framework\App\Config\Storage\WriterInterface $configWriter,
         \Magento\Framework\App\RequestInterface $request,
         \CheckoutCom\Magento2\Gateway\Config\Loader $loader,
         \CheckoutCom\Magento2\Helper\Utilities $utilities
@@ -75,7 +75,7 @@ class Config
         $this->assetRepository = $assetRepository;
         $this->storeManager = $storeManager;
         $this->scopeConfig = $scopeConfig;
-        $this->configInterface = $configInterface;
+        $this->configWriter = $configWriter;
         $this->request = $request;
         $this->loader = $loader;
         $this->utilities = $utilities;
@@ -150,7 +150,7 @@ class Config
 
     public function setValue($field, $value, $area = 'configuration') {
 
-        $this->configInterface->saveConfig(
+        $this->configWriter->save(
             'payment/' . $area . '/' . $field,
             $value,
             \Magento\Framework\App\Config\ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
