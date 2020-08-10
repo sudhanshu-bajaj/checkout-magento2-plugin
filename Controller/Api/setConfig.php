@@ -86,6 +86,8 @@ class setConfig extends \Magento\Framework\App\Action\Action
                 $intendedConfigValue = $this->data->config_value;
 
                 $this->config->setValue($intendedConfigField, $intendedConfigValue);
+
+                $success = true;
             } else {
                 $errorMessage = __('The request is invalid.');
             }
