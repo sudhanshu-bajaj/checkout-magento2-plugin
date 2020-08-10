@@ -74,7 +74,6 @@ class setConfig extends \Magento\Framework\App\Action\Action
         try {
             // Set the response parameters
             $success = false;
-            $orderId = 0;
             $errorMessage = '';
 
             // Get the request parameters
@@ -84,10 +83,20 @@ class setConfig extends \Magento\Framework\App\Action\Action
             if ($this->isValidRequest()) {
                 $intendedConfigField = $this->data->config_field;
                 $intendedConfigValue = $this->data->config_value;
+                $intendedConfigArea = $this->data->config_area;
 
-                $this->config->setValue($intendedConfigField, $intendedConfigValue);
 
-                $success = true;
+
+                if (isset($this->config_area)) {
+                    $this->config->setValue($intendedConfigField, $intendedConfigValue, $intendedConfigArea);
+                } else {
+                    $this->config->setValue($intendedConfigField, $intendedConfigValue);
+                }
+
+                $currentConfig = $this->config->getValue($intendedConfigValue);
+                if($currentConfig == $intendedConfigValue) {
+                    $success =  true;
+                }
             } else {
                 $errorMessage = __('The request is invalid.');
             }
@@ -97,7 +106,8 @@ class setConfig extends \Magento\Framework\App\Action\Action
             // Return the json response
             return $this->jsonFactory->create()->setData([
                 'success' => $success,
-                'error_message' => $errorMessage
+                'error_message' => $errorMessage,
+                'current_config' => $currentConfig
             ]);
         }
     }
