@@ -147,6 +147,7 @@ class PlaceOrder extends \Magento\Framework\App\Action\Action
 
             // Try to load a quote
             $this->quote = $this->quoteHandler->getQuote();
+            $this->logger->write('Quote:' . $this->quote);
 
             // Set some required properties
             $this->data = $this->getRequest()->getParams();
@@ -158,11 +159,14 @@ class PlaceOrder extends \Magento\Framework\App\Action\Action
                     $order = $this->orderHandler
                         ->setMethodId($this->data['methodId'])
                         ->handleOrder($this->quote);
+                    $this->logger->write('Order:' . $order);
+
 
                     // Process the payment
                     if ($this->orderHandler->isOrder($order)) {
                         // Get response and success
                         $response = $this->requestPayment($order);
+                        $this->logger->write('Gateway response:' . $response);
 
                         // Logging
                         $this->logger->display($response);
