@@ -56,6 +56,11 @@ class PlaceOrder extends \Magento\Framework\App\Action\Action
     public $paymentErrorHandler;
 
     /**
+     * @var StatusHandlerService
+     */
+    public $statusHandler;
+
+    /**
      * @var JsonFactory
      */
     public $jsonFactory;
@@ -113,6 +118,7 @@ class PlaceOrder extends \Magento\Framework\App\Action\Action
         \CheckoutCom\Magento2\Model\Service\MethodHandlerService $methodHandler,
         \CheckoutCom\Magento2\Model\Service\ApiHandlerService $apiHandler,
         \CheckoutCom\Magento2\Model\Service\PaymentErrorHandlerService $paymentErrorHandler,
+        \CheckoutCom\Magento2\Model\Service\StatusHandlerService $statusHandler,
         \CheckoutCom\Magento2\Helper\Utilities $utilities,
         \CheckoutCom\Magento2\Gateway\Config\Config $config,
         \CheckoutCom\Magento2\Helper\Logger $logger
@@ -126,6 +132,7 @@ class PlaceOrder extends \Magento\Framework\App\Action\Action
         $this->methodHandler = $methodHandler;
         $this->apiHandler = $apiHandler;
         $this->paymentErrorHandler = $paymentErrorHandler;
+        $this->statusHandler = $statusHandler;
         $this->checkoutSession = $checkoutSession;
         $this->utilities = $utilities;
         $this->config = $config;
@@ -198,7 +205,7 @@ class PlaceOrder extends \Magento\Framework\App\Action\Action
                             $this->quoteHandler->restoreQuote($order->getIncrementId());
 
                             // Handle order on failed payment
-                            $this->orderHandler->handleFailedPayment($order, $storeCode);
+                            $this->statusHandler->handleFailedPayment($order, $storeCode);
                         }
                     } else {
                         // Payment failed

@@ -82,11 +82,6 @@ class OrderHandlerService
     public $paymentData;
 
     /**
-     * @var Registry
-     */
-    public $registry;
-
-    /**
      * @var Order
      */
     public $orderModel;
@@ -100,7 +95,6 @@ class OrderHandlerService
         \Magento\Quote\Model\QuoteManagement $quoteManagement,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
         \Magento\Sales\Model\Order $orderModel,
-        \Magento\Framework\Registry $registry,
         \Magento\Framework\Api\SearchCriteriaBuilder $searchBuilder,
         \CheckoutCom\Magento2\Gateway\Config\Config $config,
         \CheckoutCom\Magento2\Model\Service\QuoteHandlerService $quoteHandler,
@@ -112,7 +106,6 @@ class OrderHandlerService
         $this->quoteManagement = $quoteManagement;
         $this->orderRepository = $orderRepository;
         $this->orderModel = $orderModel;
-        $this->registry = $registry;
         $this->searchBuilder = $searchBuilder;
         $this->config = $config;
         $this->quoteHandler = $quoteHandler;
@@ -160,38 +153,6 @@ class OrderHandlerService
             throw new \Magento\Framework\Exception\LocalizedException(
                 __('A payment method ID is required to place an order.')
             );
-        }
-    }
-
-    /**
-     * Sets status/deletes order based on user config if payment fails
-     */
-    public function handleFailedPayment($order, $storeId, $webhook = false)
-    {
-        $failedWebhooks = [
-            "payment_declined",
-            "payment_expired",
-            "payment_cancelled",
-            "payment_voided",
-            "payment_capture_declined"
-        ];
-
-        if (!$webhook || in_array($webhook, $failedWebhooks)) {
-            // Get config for failed payments
-            $config = $this->config->getValue('order_action_failed_payment', null, $storeId);
-
-            if ($config == 'cancel' || $config == 'delete') {
-                $this->orderModel->loadByIncrementId($order->getIncrementId())->cancel();
-                $order->setStatus($this->config->getValue('order_status_canceled'));
-                $order->setState($this->orderModel::STATE_CANCELED);
-                $order->save();
-
-                if ($config == 'delete') {
-                    $this->registry->register('isSecureArea', true);
-                    $this->orderRepository->delete($order);
-                    $this->registry->unregister('isSecureArea');
-                }
-            }
         }
     }
 

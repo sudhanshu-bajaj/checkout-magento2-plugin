@@ -95,6 +95,11 @@ class TransactionHandlerService
     public $webhookHandler;
 
     /**
+     * @var StatusHandlerService
+     */
+    public $statusHandler;
+
+    /**
      * @var Config
      */
     public $config;
@@ -115,6 +120,7 @@ class TransactionHandlerService
         \CheckoutCom\Magento2\Helper\Utilities $utilities,
         \CheckoutCom\Magento2\Model\Service\InvoiceHandlerService $invoiceHandler,
         \CheckoutCom\Magento2\Model\Service\WebhookHandlerService $webhookHandler,
+        \CheckoutCom\Magento2\Model\Service\StatusHandlerService $statusHandler,
         \CheckoutCom\Magento2\Gateway\Config\Config $config
     ) {
         $this->orderModel            = $orderModel;
@@ -129,6 +135,7 @@ class TransactionHandlerService
         $this->utilities             = $utilities;
         $this->invoiceHandler        = $invoiceHandler;
         $this->webhookHandler        = $webhookHandler;
+        $this->statusHandler         = $statusHandler;
         $this->config                = $config;
     }
 
@@ -149,7 +156,7 @@ class TransactionHandlerService
             $order
         );
 
-        if ($this->needsTransaction()) {
+        if ($this->needsTransaction($payload)) {
             // Check if a transaction aleady exists
             $transaction = $this->hasTransaction(
                 $order,
@@ -202,7 +209,7 @@ class TransactionHandlerService
         }
 
         // Update the order status
-        $this->setOrderStatus($order, $transaction, $amount, $payload);
+        $this->statusHandler->setOrderStatus($order, $transaction, $amount, $payload);
     }
 
     /**
@@ -423,81 +430,6 @@ class TransactionHandlerService
 
         return isset($transactions[0]) ? $transactions[0] : false;
     }
-
-    /**
-     * Set the current order status.
-     */
-    public function setOrderStatus($order, $transaction, $amount, $payload)
-    {
-        // Initialise state and status
-        $state = null;
-        $status = null;
-
-        // Get the state
-        if ($transaction) {
-            $status = $this->setOrderStatusByTransaction($order, $transaction, $amount, $payload);
-        } else {
-            $status = $this->webhookHandler->setOrderStatusByWebhook($payload);
-        }
-    }
-
-    public function setOrderStatusByTransaction($order, $transaction, $amount, $payload) {
-        // Get the event type
-        $type = $transaction->getTxnType();
-
-        // Initialise state and status
-        $state = null;
-        $status = null;
-
-        // Get the needed order status
-        switch ($type) {
-            case Transaction::TYPE_AUTH:
-                if ($order->getState() !== 'processing') {
-                    $status = $this->config->getValue('order_status_authorized');
-                }
-                // Flag order if potential fraud
-                if ($this->isFlagged($payload)) {
-                    $status = $this->config->getValue('order_status_flagged');
-                }
-                break;
-
-            case Transaction::TYPE_CAPTURE:
-                $status = $this->config->getValue('order_status_captured');
-                $state = $this->orderModel::STATE_PROCESSING;
-                break;
-
-            case Transaction::TYPE_VOID:
-                $status = $this->config->getValue('order_status_voided');
-                $state = $this->orderModel::STATE_CANCELED;
-                break;
-
-            case Transaction::TYPE_REFUND:
-                $isPartialRefund = $this->isPartialRefund(
-                    $transaction,
-                    $amount,
-                    true
-                );
-                $status = $isPartialRefund ? 'order_status_captured' : 'order_status_refunded';
-                $status = $this->config->getValue($status);
-                $state = $isPartialRefund ? $this->orderModel::STATE_PROCESSING : $this->orderModel::STATE_CLOSED;
-                break;
-        }
-
-        if ($state) {
-            // Set the order state
-            $order->setState($state);
-        }
-
-        if ($status) {
-            // Set the order status
-            $order->setStatus($status);
-        }
-
-        // Save the order
-        $order->save();
-    }
-
-
 
     /**
      * Add a transaction comment to an order.
@@ -757,13 +689,8 @@ class TransactionHandlerService
         return $isPartialCapture && $isCapture ? true : false;
     }
 
-    /**
-     * @param $payload
-     * @return bool
-     * Check if payment has been flagged for potential fraud
-     */
-    public function isFlagged($payload) {
-        return isset($payload->data->risk->flagged)
-            && $payload->data->risk->flagged == true;
+    public function needsTransaction($payload)
+    {
+        return isset(self::$transactionMapper[$payload->type]);
     }
 }

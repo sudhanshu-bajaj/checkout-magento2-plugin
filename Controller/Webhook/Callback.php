@@ -17,6 +17,7 @@
 
 namespace CheckoutCom\Magento2\Controller\Webhook;
 
+
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Webapi\Exception as WebException;
@@ -68,6 +69,12 @@ class Callback extends \Magento\Framework\App\Action\Action
      */
     public $paymentErrorHandler;
 
+
+    /**
+     * @var StatusHandlerService
+     */
+    public $statusHandler;
+
     /**
      * @var Config
      */
@@ -91,6 +98,7 @@ class Callback extends \Magento\Framework\App\Action\Action
         \CheckoutCom\Magento2\Model\Service\WebhookHandlerService $webhookHandler,
         \CheckoutCom\Magento2\Model\Service\VaultHandlerService $vaultHandler,
         \CheckoutCom\Magento2\Model\Service\PaymentErrorHandlerService $paymentErrorHandler,
+        \CheckoutCom\Magento2\Model\Service\StatusHandlerService $statusHandler,
         \CheckoutCom\Magento2\Gateway\Config\Config $config,
         \CheckoutCom\Magento2\Helper\Utilities $utilities
     ) {
@@ -104,6 +112,7 @@ class Callback extends \Magento\Framework\App\Action\Action
         $this->webhookHandler = $webhookHandler;
         $this->vaultHandler = $vaultHandler;
         $this->paymentErrorHandler = $paymentErrorHandler;
+        $this->statusHandler = $statusHandler;
         $this->config = $config;
         $this->utilities = $utilities;
     }
@@ -168,7 +177,7 @@ class Callback extends \Magento\Framework\App\Action\Action
                                     $order
                                 );
 
-                                $this->orderHandler->handleFailedPayment($order, $storeCode, $this->payload->type);
+                                $this->statusHandler->handleFailedPayment($order, $storeCode, $this->payload->type);
                             }
                         } else {
                             $resultFactory->setHttpResponseCode(WebException::HTTP_INTERNAL_ERROR);
