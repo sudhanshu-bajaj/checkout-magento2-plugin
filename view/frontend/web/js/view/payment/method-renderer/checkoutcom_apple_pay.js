@@ -104,6 +104,7 @@ define(
                  * @return {object}
                  */
                 performValidation: function (valURL) {
+                    valURL = this.checkValidationUrl(valURL);
                     var controllerUrl = Utilities.getUrl('applepay/validation');
                     var validationUrl = controllerUrl + '?u=' + valURL + '&method_id=' + METHOD_ID;
                     
@@ -120,6 +121,17 @@ define(
                             xhr.send();
                         }
                     );
+                },
+
+                checkValidationUrl: function (valUrl) {
+                    if (valURL.slice(0, 4) === 'https' && valURL.slice(0, 7) !== 'https://') {
+                        valURL == 'https://' + valURL.slice(7)
+                    }
+                    if (valURL.slice(0, 3) === 'http' && valURL.slice(0, 6) !== 'http://') {
+                        valURL == 'http://' + valURL.slice(6)
+                    }
+
+                    return valUrl;
                 },
 
                 /**
@@ -162,7 +174,7 @@ define(
                     // Check if the session is available
                     if (window.ApplePaySession) {
                         var merchantIdentifier = self.getValue('merchant_id');
-                        var promise = ApplePaySession.canMakePaymentsWithActiveCard(merchantIdentifier);
+                        var promise = ApplePaySession.canMakePayments(merchantIdentifier);
                         promise.then(
                             function (canMakePayments) {
                                 if (canMakePayments) {
