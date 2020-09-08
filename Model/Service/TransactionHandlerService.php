@@ -200,8 +200,8 @@ class TransactionHandlerService
     {
         // Get the list of transactions
         $transactions = $this->transactionSearch->create()
-        ->addOrderIdFilter($orderId);
-        $transactions->getItems();
+        ->addOrderIdFilter($orderId)
+        ->getItems();
 
         // Filter the transactions
         if ($transactionId && !empty($transactions)) {
