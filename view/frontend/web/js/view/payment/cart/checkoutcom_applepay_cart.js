@@ -267,9 +267,9 @@ require([
          * @return {object}
          */
         function performValidation(valURL) {
+            valURL = checkValidationUrl(valURL);
             var controllerUrl = Utilities.getUrl("applepay/validation");
-            var validationUrl =
-                controllerUrl + "?u=" + valURL + "&method_id=" + methodId;
+            var validationUrl = controllerUrl + "?u=" + valURL + "&method_id=" + methodId;
 
             return new Promise(function (resolve, reject) {
                 var xhr = new XMLHttpRequest();
@@ -282,6 +282,15 @@ require([
                 xhr.open("GET", validationUrl);
                 xhr.send();
             });
+        }
+
+        function checkValidationUrl(valURL) {
+            if (valURL.slice(0, 4) === 'https' && valURL.slice(0, 7) !== 'https://') {
+                valURL = 'https://' + valURL.slice(7);
+                console.log(valURL)
+            }
+
+            return valURL;
         }
 
         /**

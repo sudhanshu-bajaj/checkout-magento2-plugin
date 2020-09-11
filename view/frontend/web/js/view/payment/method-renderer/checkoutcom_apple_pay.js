@@ -104,6 +104,7 @@ define(
                  * @return {object}
                  */
                 performValidation: function (valURL) {
+                    console.log(valURL);
                     valURL = this.checkValidationUrl(valURL);
                     var controllerUrl = Utilities.getUrl('applepay/validation');
                     var validationUrl = controllerUrl + '?u=' + valURL + '&method_id=' + METHOD_ID;
@@ -123,15 +124,13 @@ define(
                     );
                 },
 
-                checkValidationUrl: function (valUrl) {
+                checkValidationUrl: function (valURL) {
                     if (valURL.slice(0, 4) === 'https' && valURL.slice(0, 7) !== 'https://') {
-                        valURL = 'https://' + valURL.slice(7)
-                    }
-                    if (valURL.slice(0, 3) === 'http' && valURL.slice(0, 6) !== 'http://') {
-                        valURL = 'http://' + valURL.slice(6)
+                        valURL = 'https://' + valURL.slice(7);
+                        console.log(valURL)
                     }
 
-                    return valUrl;
+                    return valURL;
                 },
 
                 /**
@@ -228,20 +227,26 @@ define(
 
                                 // Start the payment session
                                 var session = new ApplePaySession(1, paymentRequest);
+                                console.log('ApplePaySession created')
 
                                 // Merchant Validation
                                 session.onvalidatemerchant = function (event) {
+                                    console.log('onvalidatemerchant fired');
+                                    console.log(event);
+                                    console.log(event.validationURL);
                                     var promise = self.performValidation(event.validationURL);
                                     promise.then(
                                         function (merchantSession) {
+                                            console.log(merchantSession);
                                             session.completeMerchantValidation(merchantSession);
+                                            console.log('completeMerchantValidation');
                                         }
                                     ).catch(
                                         function (error) {
                                             Utilities.log(error);
                                         }
                                     );
-                                }
+                                };
 
                                 // Shipping contact
                                 session.onshippingcontactselected = function (event) {
@@ -257,7 +262,7 @@ define(
                                     };
                                 
                                     session.completeShippingContactSelection(status, shippingOptions, newTotal, self.getLineItems());
-                                }
+                                };
 
                                 // Shipping method selection
                                 session.onshippingmethodselected = function (event) {
@@ -269,7 +274,7 @@ define(
                                     };
 
                                     session.completeShippingMethodSelection(status, newTotal, self.getLineItems());
-                                }
+                                };
 
                                 // Payment method selection
                                 session.onpaymentmethodselected = function (event) {
