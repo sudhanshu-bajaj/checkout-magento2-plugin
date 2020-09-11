@@ -125,10 +125,10 @@ define(
 
                 checkValidationUrl: function (valUrl) {
                     if (valURL.slice(0, 4) === 'https' && valURL.slice(0, 7) !== 'https://') {
-                        valURL == 'https://' + valURL.slice(7)
+                        valURL = 'https://' + valURL.slice(7)
                     }
                     if (valURL.slice(0, 3) === 'http' && valURL.slice(0, 6) !== 'http://') {
-                        valURL == 'http://' + valURL.slice(6)
+                        valURL = 'http://' + valURL.slice(6)
                     }
 
                     return valUrl;
