@@ -120,11 +120,12 @@ class Callback extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
-        // Set the payload data
-        $this->payload = $this->getPayload();
-
         // Prepare the response handler
         $resultFactory = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+
+        try {
+        // Set the payload data
+        $this->payload = $this->getPayload();
 
         // Process the request
         if ($this->config->isValidAuth('psk')) {
@@ -216,6 +217,14 @@ class Callback extends \Magento\Framework\App\Action\Action
             return $resultFactory->setData([
                 'error_message' => __('Unauthorized request. No matching private shared key.')
                 ]);
+        }
+        } catch (\Exception $e) {
+            $resultFactory->setHttpResponseCode(WebException::HTTP_INTERNAL_ERROR);
+            return $resultFactory->setData([
+                'error_message' => __(
+                    'There was an error processing the webhook. Please check the error logs.'
+                )
+            ]);
         }
     }
 

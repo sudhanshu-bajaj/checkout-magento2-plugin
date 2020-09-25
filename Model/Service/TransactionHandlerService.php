@@ -98,6 +98,12 @@ class TransactionHandlerService
      */
     public $orderHandler;
 
+    public $order;
+
+    public $transaction;
+
+    public $payment;
+
     /**
      * TransactionHandlerService constructor.
      */
@@ -137,10 +143,13 @@ class TransactionHandlerService
     public function handleTransaction($order, $webhook)
     {
         // Check if a transaction already exists
-        $transaction = $this->hasTransaction(
+        $this->transaction = $this->hasTransaction(
             $order,
             $webhook['action_id']
         );
+
+        $this->order = $order;
+        $this->payment = $this->order->getPayment();
 
         // Load the webhook data
         $payload = json_decode($webhook['event_data']);
@@ -148,7 +157,7 @@ class TransactionHandlerService
         // Format the amount
         $amount = $this->amountFromGateway(
             $payload->data->amount,
-            $order
+            $this->order
         );
 
         // Check to see if webhook is supported
@@ -159,52 +168,57 @@ class TransactionHandlerService
             }
             
             // Create a transaction if needed
-            if (!$transaction && !$isBackendAction) {
+            if (!$this->transaction && !$isBackendAction) {
                 // Build the transaction
-                $transaction = $this->buildTransaction(
-                    $order,
+                $this->buildTransaction(
                     $webhook,
                     $amount
                 );
 
                 // Update the order status
-                $this->setOrderStatus($transaction, $amount, $payload, $order);
+                $this->setOrderStatus($amount, $payload);
 
                 // Add the order comment
                 $this->addTransactionComment(
-                    $transaction,
                     $amount
                 );
                 
                 // Process the invoice case
-                $this->processInvoice($transaction, $amount);
+                $this->processInvoice($amount);
 
                 // Process the credit memo case
-                $this->processCreditMemo($transaction, $amount);
+                $this->processCreditMemo($amount);
                 
                 // Update the order status
-                $this->setOrderStatus($transaction, $amount, $payload, $order);
+                $this->setOrderStatus($amount, $payload);
 
                 // Process the order email case
-                $this->processEmail($transaction);
-            } elseif ($transaction) {
+                $this->processEmail();
+            } elseif ($this->transaction) {
                 // Update the existing transaction state
-                $transaction->setIsClosed(
-                    $this->setTransactionState($transaction, $amount)
+                $this->transaction->setIsClosed(
+                    $this->setTransactionState($amount)
                 );
-                
-                // Save
-                $transaction->save();
-                
+
                 // Update the order status
-                $this->setOrderStatus($transaction, $amount, $payload, $order);
+                $this->setOrderStatus($amount, $payload);
 
                 // Process the order email case
-                $this->processEmail($transaction);
+                $this->processEmail();
+
+                // Save
+                $this->transaction->save();
+                $this->payment->save();
+                $this->order->save();
             }
         } else {
             // Update the order status
-            $this->setOrderStatus($transaction, $amount, $payload, $order);
+            $this->setOrderStatus($amount, $payload);
+
+            // Save
+            $this->transaction->save();
+            $this->payment->save();
+            $this->order->save();
         }
     }
 
@@ -250,20 +264,17 @@ class TransactionHandlerService
     /**
      * Create a transaction for an order.
      */
-    public function buildTransaction($order, $webhook, $amount)
+    public function buildTransaction($webhook, $amount)
     {
-        // Get the order payment
-        $payment = $order->getPayment();
-
         // Prepare the data array
         $data = $this->utilities->objectToArray(
             json_decode($webhook['event_data'])
         );
 
         // Create the transaction
-        $transaction = $this->transactionBuilder
-        ->setPayment($payment)
-        ->setOrder($order)
+        $this->transaction = $this->transactionBuilder
+        ->setPayment($this->payment)
+        ->setOrder($this->order)
         ->setTransactionId($webhook['action_id'])
         ->setAdditionalInformation([
             Transaction::RAW_DETAILS => $this->buildDataArray($data)
@@ -272,20 +283,14 @@ class TransactionHandlerService
         ->build(self::$transactionMapper[$webhook['event_type']]);
 
         // Set the parent transaction id
-        $transaction->setParentTxnId(
-            $this->setParentTransactionId($transaction)
+        $this->transaction->setParentTxnId(
+            $this->setParentTransactionId($this->transaction)
         );
 
         // Handle the transaction state
-        $transaction->setIsClosed(
-            $this->setTransactionState($transaction, $amount)
+        $this->transaction->setIsClosed(
+            $this->setTransactionState($this->transaction, $amount)
         );
-
-        // Save
-        $transaction->save();
-        $payment->save();
-
-        return $transaction;
     }
 
     /**
@@ -430,11 +435,11 @@ class TransactionHandlerService
     /**
      * Set the current order status.
      */
-    public function setOrderStatus($transaction, $amount, $payload, $order)
+    public function setOrderStatus($amount, $payload)
     {
-       if ($transaction) {
+       if ($this->transaction) {
            // Get the transaction type
-           $type = $transaction->getTxnType();
+           $type = $this->transaction->getTxnType();
        } else {
            // Get the webhook type if transaction does not exist
            $type = $payload->type;
@@ -447,7 +452,7 @@ class TransactionHandlerService
         // Get the needed order status
         switch ($type) {
             case Transaction::TYPE_AUTH:
-                if ($order->getState() !== 'processing') {
+                if ($this->order->getState() !== 'processing') {
                     $status = $this->config->getValue('order_status_authorized');
                 }
                 // Flag order if potential fraud
@@ -468,7 +473,7 @@ class TransactionHandlerService
 
             case Transaction::TYPE_REFUND:
                 $isPartialRefund = $this->isPartialRefund(
-                    $transaction,
+                    $this->transaction,
                     $amount,
                     true
                 );
@@ -482,47 +487,36 @@ class TransactionHandlerService
                     && $payload->data->metadata->methodId === 'checkoutcom_apm'
                 ) {
                     $state = $this->orderModel::STATE_PENDING_PAYMENT;
-                    $status = $order->getConfig()->getStateDefaultStatus($state);
-                    $order->addStatusHistoryComment(__('Payment capture initiated, awaiting capture confirmation.'));
+                    $status = $this->order->getConfig()->getStateDefaultStatus($state);
+                    $this->order->addStatusHistoryComment(__('Payment capture initiated, awaiting capture confirmation.'));
                 }
                 break;
 
             case 'payment_expired':
-                $order->addStatusHistoryComment(__('3DS payment expired.'));
-                $this->orderHandler->handleFailedPayment($order);
+                $this->order->addStatusHistoryComment(__('3DS payment expired.'));
+                $this->orderHandler->handleFailedPayment($this->order);
                 break;
         }
 
         if ($state) {
             // Set the order state
-            $order->setState($state);
+            $this->order->setState($state);
         }
 
-        if ($status && $order->getStatus() != 'closed') {
+        if ($status && $this->order->getStatus() != 'closed') {
             // Set the order status
-            $order->setStatus($status);
-        }
-
-        // Check if order has not been deleted
-        if ($this->orderHandler->isOrder($order)) {
-            // Save the order
-            $order->save();
+            $this->order->setStatus($status);
         }
     }
 
     /**
      * Add a transaction comment to an order.
      */
-    public function addTransactionComment($transaction, $amount)
+    public function addTransactionComment($amount)
     {
-        // Get the order
-        $order = $transaction->getOrder();
-
-        // Get the order payment
-        $payment = $order->getPayment();
 
         // Get the transaction type
-        $type = $transaction->getTxnType();
+        $type = $this->transaction->getTxnType();
 
         // Prepare the comment
         switch ($type) {
@@ -544,11 +538,11 @@ class TransactionHandlerService
         }
 
         // Convert currency amount to base amount
-        $amount = $amount / $order->getBaseToOrderRate();
+        $amount = $amount / $this->order->getBaseToOrderRate();
         // Add the transaction comment
-        $payment->addTransactionCommentsToOrder(
-            $transaction,
-            __($comment, $this->getFormattedAmount($order, $amount))
+        $this->payment->addTransactionCommentsToOrder(
+            $this->transaction,
+            __($comment, $this->getFormattedAmount($this->order, $amount))
         );
     }
 
