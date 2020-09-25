@@ -144,6 +144,7 @@ class TransactionHandlerService
     {
         // Check if a transaction already exists
         $this->transaction = $this->hasTransaction(
+            $order,
             $webhook['action_id']
         );
 
@@ -192,6 +193,11 @@ class TransactionHandlerService
 
                 // Process the order email case
                 $this->processEmail();
+
+                // Save
+                $this->transaction->save();
+                $this->payment->save();
+                $this->order->save();
             } elseif ($this->transaction) {
                 // Update the existing transaction state
                 $this->transaction->setIsClosed(
@@ -249,10 +255,10 @@ class TransactionHandlerService
     /**
      * Get the transactions for an order.
      */
-    public function hasTransaction($transactionId)
+    public function hasTransaction($order, $transactionId)
     {
         $transaction = $this->getTransactions(
-            $this->order->getId(),
+            $order->getId(),
             $transactionId
         );
 
@@ -287,7 +293,7 @@ class TransactionHandlerService
 
         // Handle the transaction state
         $this->transaction->setIsClosed(
-            $this->setTransactionState($this->transaction, $amount)
+            $this->setTransactionState($amount)
         );
     }
 
@@ -332,7 +338,7 @@ class TransactionHandlerService
     public function setTransactionState($amount)
     {
         // Handle the first authorization transaction
-        $noAuth = !$this->hasTransaction($this->transaction->getTxnId());
+        $noAuth = !$this->hasTransaction($this->order, $this->transaction->getTxnId());
         $isAuth = $this->transaction->getTxnType() == Transaction::TYPE_AUTH;
         if ($noAuth && $isAuth) {
             return 0;
