@@ -130,9 +130,7 @@ class Verify extends \Magento\Framework\App\Action\Action
                     $this->methodId = $response->metadata['methodId'];
 
                     // Find the order from increment id
-                    $order = $this->orderHandler->getOrder([
-                        'increment_id' => $response->reference
-                    ]);
+                    $order = $this->orderHandler->getOrderById($response->reference);
 
                     // Process the order
                     if ($this->orderHandler->isOrder($order)) {

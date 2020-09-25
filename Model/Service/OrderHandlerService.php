@@ -218,6 +218,10 @@ class OrderHandlerService
         return $this->findOrderByFields($fields);
     }
 
+    public function getOrderById($incrementId) {
+        return $this->orderRepository->get($incrementId);
+    }
+
     /**
      * Gets an order currency
      */

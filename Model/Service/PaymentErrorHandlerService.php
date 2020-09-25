@@ -54,7 +54,7 @@ class PaymentErrorHandlerService
     }
 
     /**
-     * Create a transaction for an order.
+     * Log a payment error.
      */
     public function logError($response, $order)
     {
