@@ -123,7 +123,6 @@ class Callback extends \Magento\Framework\App\Action\Action
         // Prepare the response handler
         $resultFactory = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
-        try {
         // Set the payload data
         $this->payload = $this->getPayload();
 
@@ -171,11 +170,20 @@ class Callback extends \Magento\Framework\App\Action\Action
                                     $this->webhookHandler->clean();
                                 }
 
+                                try {
                                 // Save the webhook
                                 $this->webhookHandler->processSingleWebhook(
                                     $order,
                                     $this->payload
                                 );
+                                } catch (\Exception $e) {
+                                $resultFactory->setHttpResponseCode(WebException::HTTP_INTERNAL_ERROR);
+                                return $resultFactory->setData([
+                                    'error_message' => __(
+                                        'There was an error processing the webhook. Please check the error logs.'
+                                    )
+                                ]);
+                            }
 
                                 // Set a valid response
                                 $resultFactory->setHttpResponseCode(WebResponse::HTTP_OK);
@@ -217,14 +225,6 @@ class Callback extends \Magento\Framework\App\Action\Action
             return $resultFactory->setData([
                 'error_message' => __('Unauthorized request. No matching private shared key.')
                 ]);
-        }
-        } catch (\Exception $e) {
-            $resultFactory->setHttpResponseCode(WebException::HTTP_INTERNAL_ERROR);
-            return $resultFactory->setData([
-                'error_message' => __(
-                    'There was an error processing the webhook. Please check the error logs.'
-                )
-            ]);
         }
     }
 
