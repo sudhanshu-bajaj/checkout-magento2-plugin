@@ -92,20 +92,23 @@ require([
                     },
                     supportedNetworks: getSupportedNetworks(),
                     merchantCapabilities: getMerchantCapabilities(),
-                    requiredShippingContactFields: [
-                        "postalAddress",
-                        "name",
-                        "phone",
-                        "email",
-                    ],
                     requiredBillingContactFields: [
                         "postalAddress",
                         "name",
                         "phone",
                         "email",
-                    ],
-                    shippingMethods: [],
+                    ]
                 };
+                
+                if (!Utilities.getIsVirtual()) {
+                    paymentRequest.requiredShippingContactFields = [
+                        "postalAddress",
+                        "name",
+                        "phone",
+                        "email",
+                    ];
+                    paymentRequest.shippingMethods = [];
+                }
 
                 // Start the payment session
                 var session = new ApplePaySession(6, paymentRequest);
@@ -418,18 +421,6 @@ require([
         function setShippingAndBilling(shippingDetails, billingDetails) {
             let requestBody = {
                 addressInformation: {
-                    shipping_address: {
-                        country_id: shippingDetails.countryCode.toUpperCase(),
-                        region_code: getAreaCode(shippingDetails.postalCode, shippingDetails.countryCode),
-                        region_id: 0,
-                        street: shippingDetails.addressLines,
-                        postcode: shippingDetails.postalCode,
-                        city: shippingDetails.locality,
-                        firstname: shippingDetails.givenName,
-                        lastname: shippingDetails.familyName,
-                        email: shippingDetails.emailAddress,
-                        telephone: shippingDetails.phoneNumber,
-                    },
                     billing_address: {
                         country_id: billingDetails.countryCode.toUpperCase(),
                         street: billingDetails.addressLines,
@@ -437,13 +428,29 @@ require([
                         city: billingDetails.locality,
                         firstname: billingDetails.givenName,
                         lastname: billingDetails.familyName,
-                        email: shippingDetails.emailAddress,
-                        telephone: shippingDetails.phoneNumber,
-                    },
-                    shipping_carrier_code: selectedShippingMethod.carrier_code,
-                    shipping_method_code: selectedShippingMethod.method_code,
+                        email: shippingDetails ? shippingDetails.emailAddress : billingDetails.emailAddress,
+                        telephone: shippingDetails ? shippingDetails.phoneNumber : billingDetails.emailAddress,
+                    }
                 },
             };
+
+            if (!Utilities.getIsVirtual()) {
+                requestBody.addressInformation.shipping_address = {
+                    country_id: shippingDetails.countryCode.toUpperCase(),
+                    region_code: getAreaCode(shippingDetails.postalCode, shippingDetails.countryCode),
+                    region_id: 0,
+                    street: shippingDetails.addressLines,
+                    postcode: shippingDetails.postalCode,
+                    city: shippingDetails.locality,
+                    firstname: shippingDetails.givenName,
+                    lastname: shippingDetails.familyName,
+                    email: shippingDetails.emailAddress, 
+                    telephone: shippingDetails.phoneNumber,
+                };
+                requestBody.addressInformation.shipping_carrier_code = selectedShippingMethod.carrier_code;
+                requestBody.addressInformation.shipping_method_code = selectedShippingMethod.method_code;
+            }
+            
             getRestData(requestBody, "shipping-information");
         }
 

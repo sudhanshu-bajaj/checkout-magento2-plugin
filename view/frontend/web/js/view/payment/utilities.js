@@ -102,6 +102,15 @@ define(
 
                 return amount.toFixed(2);
             },
+
+            /**
+             * Get the quote virtual status.
+             *
+             * @return {bool}  The virtual value.
+             */
+            getIsVirtual: function () {
+                return Quote.isVirtual();
+            },
             
             /**
              * Get the updated quote data from the core REST API.
