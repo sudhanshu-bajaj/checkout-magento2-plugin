@@ -176,7 +176,7 @@ class Callback extends \Magento\Framework\App\Action\Action
                                     $order,
                                     $this->payload
                                 );
-                                } catch (\Exception $e) {
+                                } catch (\PDOException $e) {
                                 $resultFactory->setHttpResponseCode(WebException::HTTP_INTERNAL_ERROR);
                                 return $resultFactory->setData([
                                     'error_message' => __(
