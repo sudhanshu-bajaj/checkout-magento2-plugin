@@ -170,20 +170,12 @@ class Callback extends \Magento\Framework\App\Action\Action
                                     $this->webhookHandler->clean();
                                 }
 
-                                try {
+
                                 // Save the webhook
                                 $this->webhookHandler->processSingleWebhook(
                                     $order,
                                     $this->payload
                                 );
-                                } catch (\PDOException $e) {
-                                $resultFactory->setHttpResponseCode(WebException::HTTP_INTERNAL_ERROR);
-                                return $resultFactory->setData([
-                                    'error_message' => __(
-                                        'There was an error processing the webhook. Please check the error logs.'
-                                    )
-                                ]);
-                            }
 
                                 // Set a valid response
                                 $resultFactory->setHttpResponseCode(WebResponse::HTTP_OK);
