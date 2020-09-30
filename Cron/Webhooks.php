@@ -37,14 +37,21 @@ class Webhooks
      */
     public $scopeConfig;
 
+    /**
+     * @var State
+     */
+    public $appState;
+
     public function __construct(
         \Psr\Log\LoggerInterface $logger,
         \CheckoutCom\Magento2\Model\Service\WebhookHandlerService $webhookHandler,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Magento\Framework\App\State $appState
     ) {
         $this->logger = $logger;
         $this->webhookHandler = $webhookHandler;
         $this->scopeConfig = $scopeConfig;
+        $this->appState = $appState;
     }
 
     /**
@@ -53,6 +60,9 @@ class Webhooks
      * @return void
      */
     public function execute() {
+        $originalArea = $this->appState->getAreaCode();
+        $this->appState->setAreaCode('adminhtml');
+        
         $clean = $this->scopeConfig->getValue(
             'settings/checkoutcom_configuration/webhooks_table_clean',
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
@@ -67,6 +77,7 @@ class Webhooks
             $this->webhookHandler->clean();
             $this->logger->info('Webhook table has been cleaned.');
         }
-        
+
+        $this->appState->setAreaCode($originalArea);
     }
 }
