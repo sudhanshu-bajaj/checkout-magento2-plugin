@@ -303,6 +303,16 @@ class Config
 
        return  $this->scopeConfig->getValue('general/locale/code', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
     }
+    
+    /**
+     * Returns the store code.
+     *
+     * @return string
+     */
+    public function getStoreCode()
+    {
+        return $this->storeManager->getStore()->getCode();
+    }
 
     /**
      * Determines if the module is in production mode.

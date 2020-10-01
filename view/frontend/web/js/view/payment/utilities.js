@@ -113,8 +113,9 @@ define(
                 var result = null;
 
                 // Build the URL
-                var restUrl = window.BASE_URL + 'rest/default/V1/';
-                    restUrl += 'carts/mine/payment-information';
+                var restUrl = window.BASE_URL + 'rest/';
+                    restUrl += window.checkoutConfig.payment.checkoutcom_magento2.checkoutcom_data.store.code;
+                    restUrl += '/V1/carts/mine/payment-information';
                     restUrl += '?form_key=' + window.checkoutConfig.formKey;
 
                 // Set the event to update data on any button click
