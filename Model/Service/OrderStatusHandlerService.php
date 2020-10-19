@@ -66,7 +66,6 @@ class OrderStatusHandlerService
         $this->orderModel            = $orderModel;
         $this->config                = $config;
         $this->orderHandler          = $orderHandler;
-        
     }
     
     /**
@@ -156,7 +155,8 @@ class OrderStatusHandlerService
     /**
      * Set the order status for a payment_approved webhook.
      */
-    public function approved($webhook) {
+    public function approved($webhook)
+    {
         $payload = json_decode($webhook['event_data']);
         if ($this->order->getState() !== 'processing') {
             $this->status = $this->config->getValue('order_status_authorized');
@@ -170,7 +170,8 @@ class OrderStatusHandlerService
     /**
      * Set the order status for a payment_captured webhook.
      */
-    public function captured() {
+    public function captured()
+    {
         $this->status = $this->config->getValue('order_status_captured');
         $this->state = $this->orderModel::STATE_PROCESSING;
     }
@@ -178,7 +179,8 @@ class OrderStatusHandlerService
     /**
      * Set the order status for a payment_void webhook.
      */
-    public function void() {
+    public function void()
+    {
         $this->status = $this->config->getValue('order_status_voided');
         $this->state = $this->orderModel::STATE_CANCELED;
     }
@@ -186,7 +188,8 @@ class OrderStatusHandlerService
     /**
      * Set the order status for a refunded webhook.
      */
-    public function refund($webhook) {
+    public function refund($webhook)
+    {
         // Format the amount
         $payload = json_decode($webhook['event_data']);
         $amount = $this->transactionHandler->amountFromGateway(
@@ -207,7 +210,8 @@ class OrderStatusHandlerService
     /**
      * Set the order status for a payment_capture_pending webhook.
      */
-    public function capturePending($webhook) {
+    public function capturePending($webhook)
+    {
         $payload = json_decode($webhook['event_data']);
         if (isset($payload->data->metadata->methodId)
             && $payload->data->metadata->methodId === 'checkoutcom_apm'

@@ -4,6 +4,10 @@
     "require": {
         "checkout/checkout-sdk-php": "~1.0"
     },
+    "require-dev": {
+        "magento/magento-coding-standard": "^5.0",
+        "squizlabs/php_codesniffer": "*"
+    },
     "type": "magento2-module",
     "version": "2.2.7",
     "autoload": {

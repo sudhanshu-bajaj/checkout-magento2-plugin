@@ -203,7 +203,6 @@ class V2 extends \Magento\Framework\App\Action\Action
             $response = $this->getPaymentResponse($order);
 
             if ($this->api->isValidResponse($response)) {
-
                 // Process the payment response
                 $is3ds = property_exists($response, '_links')
                     && isset($response->_links['redirect'])

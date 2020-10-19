@@ -142,7 +142,7 @@ class Callback extends \Magento\Framework\App\Action\Action
                         // Get the payment details
                         $response = $api->getPaymentDetails($this->payload->data->id);
     
-                        if(isset($response->reference)) {
+                        if (isset($response->reference)) {
                             // Find the order from increment id
                             $order = $this->orderHandler->getOrder([
                                 'increment_id' => $response->reference

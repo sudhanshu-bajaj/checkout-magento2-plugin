@@ -88,7 +88,7 @@ class WebhookHandlerService
     public function processSingleWebhook($order, $payload)
     {
         if (isset($payload->data->action_id)) {
-            // store the order in a class 
+            // store the order in a class
             $this->order = $order;
             
             // Save the payload
@@ -223,7 +223,7 @@ class WebhookHandlerService
             $date = strtotime('-1 day');
             if ($webhookDate > $date) {
                 continue;
-            } 
+            }
             
             if (isset($this->transactionHandler::$transactionMapper[$webhook['event_type']])) {
                 $order = $this->orderHandler->getOrder([

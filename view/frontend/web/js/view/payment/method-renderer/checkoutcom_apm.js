@@ -109,7 +109,7 @@ define(
                         let prevAddress;
 
                         Quote.billingAddress.subscribe(
-                            function(newAddress) {
+                            function (newAddress) {
                                 if (!newAddress || !prevAddress || newAddress.getKey() !== prevAddress.getKey()) {
                                     prevAddress = newAddress;
                                     if (newAddress) {
@@ -171,7 +171,6 @@ define(
                             }
                         );
                     if (data.apms.includes('klarna') == false) {
-                        
                         // Stop the loader
                         $('#apm-container').show();
                         FullScreenLoader.stopLoader();
