@@ -17,21 +17,25 @@ require([
     "jquery",
     "Magento_Checkout/js/view/payment/default",
     "CheckoutCom_Magento2/js/view/payment/utilities",
+    "CheckoutCom_Magento2/js/view/payment/applepay-utilities",
     "Magento_Checkout/js/model/full-screen-loader",
     "Magento_Checkout/js/model/payment/additional-validators",
     "Magento_Checkout/js/action/redirect-on-success",
     "Magento_Checkout/js/model/shipping-service",
     "Magento_Customer/js/model/customer",
+    "Magento_Customer/js/model/authentication-popup",
     "mage/translate",
 ], function (
     $,
     Component,
     Utilities,
+    ApplePayUtilities,
     FullScreenLoader,
     AdditionalValidators,
     RedirectOnSuccessAction,
     shippingService,
     Customer,
+    AuthPopup,
     __
 ) {
     $(function () {
@@ -81,32 +85,68 @@ require([
             // Handle the Apple Pay button being pressed
             $(buttonTarget).click(function (evt) {
                 // Build the payment request
-                var paymentRequest = {
-                    currencyCode: Utilities.getQuoteCurrency(),
-                    countryCode: window.checkoutConfig.defaultCountryId,
-                    total: {
-                        label: window.location.host,
-                        amount: Utilities.getQuoteValue(),
-                    },
-                    supportedNetworks: getSupportedNetworks(),
-                    merchantCapabilities: getMerchantCapabilities(),
-                    requiredShippingContactFields: [
-                        "postalAddress",
-                        "name",
-                        "phone",
-                        "email",
-                    ],
-                    requiredBillingContactFields: [
-                        "postalAddress",
-                        "name",
-                        "phone",
-                        "email",
-                    ],
-                    shippingMethods: [],
-                };
+                if (ApplePayUtilities.getIsVirtual()) {
+                    // User must be signed in for virtual orders
+                    if(!Customer.isLoggedIn()) {
+                        AuthPopup.showModal();
+                        return;
+                    }
 
-                // Start the payment session
-                var session = new ApplePaySession(6, paymentRequest);
+                    // Prepare the parameters
+                    var runningTotal         = Utilities.getQuoteValue();
+
+                    // Build the payment request
+                    var paymentRequest = {
+                        currencyCode: Utilities.getQuoteCurrency(),
+                        countryCode: window.checkoutConfig.defaultCountryId,
+                        total: {
+                            label: window.location.host,
+                            amount: runningTotal
+                        },
+                        supportedNetworks: getSupportedNetworks(),
+                        merchantCapabilities: getMerchantCapabilities(),
+                        requiredBillingContactFields: [
+                            "postalAddress",
+                            "name",
+                            "phone",
+                            "email"
+                        ],
+                        requiredShippingContactFields: [
+                            "phone",
+                            "email"
+                        ],
+                    };
+
+                    // Start the payment session
+                    var session = new ApplePaySession(1, paymentRequest);
+                } else {
+                    var paymentRequest = {
+                        currencyCode: Utilities.getQuoteCurrency(),
+                        countryCode: window.checkoutConfig.defaultCountryId,
+                        total: {
+                            label: window.location.host,
+                            amount: Utilities.getQuoteValue(),
+                        },
+                        supportedNetworks: getSupportedNetworks(),
+                        merchantCapabilities: getMerchantCapabilities(),
+                        requiredShippingContactFields: [
+                            "postalAddress",
+                            "name",
+                            "phone",
+                            "email",
+                        ],
+                        requiredBillingContactFields: [
+                            "postalAddress",
+                            "name",
+                            "phone",
+                            "email",
+                        ],
+                        shippingMethods: [],
+                    };
+
+                    // Start the payment session
+                    var session = new ApplePaySession(6, paymentRequest);
+                }
 
                 // Merchant Validation
                 session.onvalidatemerchant = function (event) {
@@ -187,6 +227,12 @@ require([
 
                 // When the payment method is populated/selected
                 session.onpaymentmethodselected = function (event) {
+                    if (ApplePayUtilities.getIsVirtual()) {
+                        // Update the totals, so they reflect the all total items (shipping, tax...etc)
+                        let totals = getVirtualCartTotals();
+                        totalsBreakdown = totals;
+                    }
+
                     session.completePaymentMethodSelection(
                         totalsBreakdown.total,
                         totalsBreakdown.breakdown
@@ -202,10 +248,17 @@ require([
                         source: methodId,
                     };
 
-                    setShippingAndBilling(
-                        event.payment.shippingContact,
-                        event.payment.billingContact
-                    );
+                    if (ApplePayUtilities.getIsVirtual()) {
+                        setBilling(
+                            event.payment.shippingContact,
+                            event.payment.billingContact
+                        );
+                    } else {
+                        setShippingAndBilling(
+                            event.payment.shippingContact,
+                            event.payment.billingContact
+                        );
+                    }
 
                     // Send the request
                     var promise = sendPaymentRequest(payload);
@@ -332,7 +385,7 @@ require([
                 },
             };
 
-            shippingMethodsAvailable = getRestData(
+            shippingMethodsAvailable = ApplePayUtilities.getRestData(
                 requestBody,
                 "estimate-shipping-methods"
             );
@@ -366,6 +419,38 @@ require([
          *
          * @return {object}
          */
+        function getVirtualCartTotals() {
+            let totalInfo = ApplePayUtilities.getRestData(null, "totals");
+            let breakdown = [];
+
+            totalInfo.total_segments.forEach(function (totalItem) {
+                // ignore the grand total since it's handled separately
+                if (totalItem.code === "grand_total") return;
+                if (totalItem.value === null) return;
+                // if there is not tax applied, remove it from the line items
+                if (totalItem.code === "tax" && totalItem.value === 0) return;
+                breakdown.push({
+                    type: "final",
+                    label: totalItem.title,
+                    amount: totalItem.value.toFixed(2),
+                });
+            });
+
+            return {
+                breakdown: breakdown,
+                total: {
+                    type: "final",
+                    label: window.location.host,
+                    amount: totalInfo.grand_total.toFixed(2),
+                },
+            };
+        }
+
+        /**
+         * Return the cart totals (grand total, and breakdown)
+         *
+         * @return {object}
+         */
         function getCartTotals(address) {
             let countryId = address.countryCode;
             let postCode = address.postalCode;
@@ -375,14 +460,14 @@ require([
                     address: {
                         country_id: countryId.toUpperCase(),
                         postcode: postCode,
-                        region_code: getAreaCode(postCode, countryId),
+                        region_code: ApplePayUtilities.getAreaCode(postCode, countryId),
                     },
                     shipping_carrier_code: selectedShippingMethod ? selectedShippingMethod.carrier_code : "",
                     shipping_method_code: selectedShippingMethod ? selectedShippingMethod.method_code : "",
                 },
             };
 
-            let shippingInfo = getRestData(requestBody, "totals-information");
+            let shippingInfo = ApplePayUtilities.getRestData(requestBody, "totals-information");
 
             let breakdown = [];
 
@@ -418,7 +503,7 @@ require([
                 addressInformation: {
                     shipping_address: {
                         country_id: shippingDetails.countryCode.toUpperCase(),
-                        region_code: getAreaCode(shippingDetails.postalCode, shippingDetails.countryCode),
+                        region_code: ApplePayUtilities.getAreaCode(shippingDetails.postalCode, shippingDetails.countryCode),
                         region_id: 0,
                         street: shippingDetails.addressLines,
                         postcode: shippingDetails.postalCode,
@@ -442,7 +527,25 @@ require([
                     shipping_method_code: selectedShippingMethod.method_code,
                 },
             };
-            getRestData(requestBody, "shipping-information");
+            ApplePayUtilities.getRestData(requestBody, "shipping-information");
+        }
+
+        function setBilling(shippingDetails, billingDetails) {
+            let requestBody = {
+                address: {
+                    country_id: billingDetails.countryCode.toUpperCase(),
+                    region_code: ApplePayUtilities.getAreaCode(billingDetails.postalCode, billingDetails.countryCode),
+                    region_id: 0,
+                    street: billingDetails.addressLines,
+                    postcode: billingDetails.postalCode,
+                    city: billingDetails.locality,
+                    firstname: billingDetails.givenName,
+                    lastname: billingDetails.familyName,
+                    email: shippingDetails.emailAddress,
+                    telephone: shippingDetails.phoneNumber
+                }
+            };
+            ApplePayUtilities.getRestData(requestBody, "billing-address");
         }
 
         function getRestData(requestBody, m2ApiEndpoint) {
