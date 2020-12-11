@@ -286,7 +286,9 @@ class VaultMethod extends \Magento\Payment\Model\Method\AbstractMethod
         );
         $request->description = __('Payment request from %1', $this->config->getStoreName())->getText();
         $request->payment_type = 'Regular';
-        $request->shipping = $api->createShippingAddress($quote);
+        if (!$quote->getIsVirtual()) {
+            $request->shipping = $api->createShippingAddress($quote);
+        }
 
         // Mada BIN Check
         if (isset($data['cardBin'])

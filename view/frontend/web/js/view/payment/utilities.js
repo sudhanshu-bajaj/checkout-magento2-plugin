@@ -98,7 +98,7 @@ define(
              */
             getQuoteValue: function () {
                 var data = this.getRestQuoteData();
-                var amount = parseFloat(data.totals.base_grand_total);
+                var amount = parseFloat(data.totals.grand_total);
 
                 return amount.toFixed(2);
             },
@@ -155,8 +155,10 @@ define(
              * @return {string}  The quote currency.
              */
             getQuoteCurrency: function () {
-                return Config[KEY_DATA].quote.currency;
-            },
+                var data = this.getRestQuoteData();
+
+                return data.totals.quote_currency_code;
+                },
 
             /**
              * Check if the payment method should be enabled by default.
