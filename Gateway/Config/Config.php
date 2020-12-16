@@ -55,6 +55,7 @@ class Config
      */
     public $utilities;
 
+    public $logger;
     /**
      * Config constructor
      */
@@ -64,7 +65,8 @@ class Config
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Framework\App\RequestInterface $request,
         \CheckoutCom\Magento2\Gateway\Config\Loader $loader,
-        \CheckoutCom\Magento2\Helper\Utilities $utilities
+        \CheckoutCom\Magento2\Helper\Utilities $utilities,
+        \CheckoutCom\Magento2\Helper\Logger $logger
     ) {
         $this->assetRepository = $assetRepository;
         $this->storeManager = $storeManager;
@@ -72,6 +74,7 @@ class Config
         $this->request = $request;
         $this->loader = $loader;
         $this->utilities = $utilities;
+        $this->logger = $logger;
     }
 
     /**
@@ -81,6 +84,9 @@ class Config
     {
         // Get the authorization header
         $key = $this->request->getHeader('Authorization');
+
+        $this->logger->write('Key in Header: ' . $key);
+        $this->logger->write('Key Type in Header: ' . $type);
 
         // Validate the header
         switch ($type) {
@@ -99,6 +105,7 @@ class Config
     {
         // Get the private shared key from config
         $privateSharedKey = $this->getValue('private_shared_key');
+        $this->logger->write('PSK: ' . $key);
 
         // Return the validity check
         return $key == $privateSharedKey
