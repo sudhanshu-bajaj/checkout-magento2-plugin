@@ -55,6 +55,7 @@ class Config
      */
     public $utilities;
 
+    public $logger;
     /**
      * Config constructor
      */
@@ -64,7 +65,8 @@ class Config
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Framework\App\RequestInterface $request,
         \CheckoutCom\Magento2\Gateway\Config\Loader $loader,
-        \CheckoutCom\Magento2\Helper\Utilities $utilities
+        \CheckoutCom\Magento2\Helper\Utilities $utilities,
+        \CheckoutCom\Magento2\Helper\Logger $logger
     ) {
         $this->assetRepository = $assetRepository;
         $this->storeManager = $storeManager;
@@ -72,6 +74,7 @@ class Config
         $this->request = $request;
         $this->loader = $loader;
         $this->utilities = $utilities;
+        $this->logger = $logger;
     }
 
     /**
@@ -81,6 +84,9 @@ class Config
     {
         // Get the authorization header
         $key = $this->request->getHeader('Authorization');
+
+        $this->logger->write('Key in Header: ' . $key);
+        $this->logger->write('Key Type in Header: ' . $type);
 
         // Validate the header
         switch ($type) {
@@ -99,10 +105,11 @@ class Config
     {
         // Get the private shared key from config
         $privateSharedKey = $this->getValue('private_shared_key');
+        $this->logger->write('PSK: ' . $key);
 
         // Return the validity check
         return $key == $privateSharedKey
-        && $this->request->isPost();
+            && $this->request->isPost();
     }
 
     /**
@@ -115,7 +122,7 @@ class Config
 
         // Return the validity check
         return $key == $publicKey
-        && $this->request->isPost();
+            && $this->request->isPost();
     }
 
     /**
@@ -123,9 +130,13 @@ class Config
      *
      * @return string
      */
-    public function getValue($field, $methodId = null, $storeCode = null)
-    {
-        return $this->loader->init()->getValue($field, $methodId, $storeCode);
+    public function getValue(
+        $field,
+        $methodId = null,
+        $storeCode = null,
+        $scope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+    ) {
+        return $this->loader->init()->getValue($field, $methodId, $storeCode, $scope);
     }
 
     /**
@@ -204,7 +215,7 @@ class Config
 
         // Return the check result
         return $this->getValue('active') == 1
-        && !in_array('', array_map('trim', $accountKeys));
+            && !in_array('', array_map('trim', $accountKeys));
     }
 
     /**
@@ -248,7 +259,7 @@ class Config
     public function needs3ds($methodId)
     {
         return (((bool) $this->getValue('three_ds', $methodId) === true)
-        || ((bool) $this->getValue('mada_enabled', $methodId) === true));
+            || ((bool) $this->getValue('mada_enabled', $methodId) === true));
     }
 
     /**
@@ -258,17 +269,18 @@ class Config
      */
     public function getCaptureTime()
     {
-        // Get the capture time from config
-        $captureTime = (float) $this->getValue('capture_time');
+        // Get the capture time from config and covert from hours to seconds
+        $captureTime = $this->getValue('capture_time');
+        $captureTime *= 3600;
 
         // Force capture time to a minimum of 36 seconds
-        $min = (float) $this->getValue('min_capture_time');
+        $min = $this->getValue('min_capture_time');
         $captureTime = $captureTime >= $min ? $captureTime : $min;
 
         // Check the setting
         if ($this->needsAutoCapture()) {
             // Calculate the capture date
-            $captureDate = time() + $captureTime*60*60;
+            $captureDate = time() + $captureTime;
             return $this->utilities->formatDate($captureDate);
         }
 
@@ -285,7 +297,7 @@ class Config
         $storeName = $this->getCoreValue('general/store_information/name');
         trim($storeName);
         return !empty($storeName) ? $storeName
-        : $this->storeManager->getStore()->getBaseUrl();
+            : $this->storeManager->getStore()->getBaseUrl();
     }
 
     /**
@@ -298,10 +310,15 @@ class Config
         return $this->storeManager->getStore()->getBaseUrl();
     }
 
-    public function getStoreLanguage() {
+    public function getStoreLanguage()
+    {
         $storeId =  $this->storeManager->getStore()->getId();
 
-       return  $this->scopeConfig->getValue('general/locale/code', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+        return  $this->scopeConfig->getValue(
+            'general/locale/code',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
     }
 
     /**
@@ -322,7 +339,7 @@ class Config
     public function needsAutoCapture()
     {
         return ($this->getValue('payment_action') == 'authorize_capture'
-        || (bool) $this->getValue('mada_enabled', 'checkoutcom_card_payment') === true);
+            || (bool) $this->getValue('mada_enabled', 'checkoutcom_card_payment') === true);
     }
 
     /**
@@ -333,8 +350,8 @@ class Config
     public function needsDynamicDescriptor()
     {
         return $this->getValue('dynamic_descriptor_enabled')
-        && !empty($this->getValue('descriptor_name'))
-        && !empty($this->getValue('descriptor_city'));
+            && !empty($this->getValue('descriptor_name'))
+            && !empty($this->getValue('descriptor_city'));
     }
 
     /**
@@ -345,7 +362,7 @@ class Config
     public function getMadaBinFile()
     {
         return (int) $this->getValue('environment') == 1
-        ? $this->getValue('mada_test_file') : $this->getValue('mada_live_file');
+            ? $this->getValue('mada_test_file') : $this->getValue('mada_live_file');
     }
 
     /**
@@ -366,7 +383,7 @@ class Config
     public function getImagesPath()
     {
         return $this->assetRepository
-        ->getUrl('CheckoutCom_Magento2::images');
+            ->getUrl('CheckoutCom_Magento2::images');
     }
 
     /**
@@ -377,7 +394,7 @@ class Config
     public function getCssPath()
     {
         return $this->assetRepository
-        ->getUrl('CheckoutCom_Magento2::css');
+            ->getUrl('CheckoutCom_Magento2::css');
     }
 
     /**
