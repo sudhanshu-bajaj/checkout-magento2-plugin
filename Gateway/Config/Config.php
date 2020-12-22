@@ -85,9 +85,6 @@ class Config
         // Get the authorization header
         $key = $this->request->getHeader('Authorization');
 
-
-        $this->logger->write(json_encode($key));
-
         // Validate the header
         switch ($type) {
             case 'pk':
@@ -106,6 +103,17 @@ class Config
         // Get the private shared key from config
         $privateSharedKey = $this->getValue('private_shared_key');
         $this->logger->write($key);
+        $this->logger->write($privateSharedKey);
+        if ($key == $privateSharedKey) {
+            $this->logger->write('key matches');
+        } else {
+            $this->logger->write('key does not match');
+        }
+       if ($this->request->isPost()) {
+           $this->logger->write('request is post');
+       }
+
+
 
         // Return the validity check
         return $key == $privateSharedKey
