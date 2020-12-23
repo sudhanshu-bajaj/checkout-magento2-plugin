@@ -126,7 +126,7 @@ class Callback extends \Magento\Framework\App\Action\Action
     {
         // Set the payload data
         $this->payload = $this->getPayload();
-        $this->logger->write($this->payload);
+        $this->logger->write(json_encode($this->payload));
         // Prepare the response handler
         $resultFactory = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
