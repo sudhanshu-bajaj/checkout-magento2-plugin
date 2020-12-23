@@ -488,7 +488,7 @@ require([
                 total: {
                     type: "final",
                     label: window.location.host,
-                    amount: shippingInfo.grand_total.toFixed(2),
+                    amount: Utilities.getQuoteValue()
                 },
             };
         }
