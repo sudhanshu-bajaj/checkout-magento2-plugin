@@ -272,7 +272,7 @@ class PlaceOrder extends \Magento\Framework\App\Action\Action
         $methodId = $order->getPayment()
         ->getMethodInstance()
         ->getCode();
-        $this->logger->write(json_encode($this->data));
+
         // Send the charge request
         return $this->methodHandler
         ->get($methodId)

@@ -55,7 +55,6 @@ class Config
      */
     public $utilities;
 
-    public $logger;
     /**
      * Config constructor
      */
@@ -65,8 +64,7 @@ class Config
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Framework\App\RequestInterface $request,
         \CheckoutCom\Magento2\Gateway\Config\Loader $loader,
-        \CheckoutCom\Magento2\Helper\Utilities $utilities,
-        \CheckoutCom\Magento2\Helper\Logger $logger
+        \CheckoutCom\Magento2\Helper\Utilities $utilities
     ) {
         $this->assetRepository = $assetRepository;
         $this->storeManager = $storeManager;
@@ -74,7 +72,6 @@ class Config
         $this->request = $request;
         $this->loader = $loader;
         $this->utilities = $utilities;
-        $this->logger = $logger;
     }
 
     /**
@@ -102,18 +99,6 @@ class Config
     {
         // Get the private shared key from config
         $privateSharedKey = $this->getValue('private_shared_key');
-        $this->logger->write($key);
-        $this->logger->write($privateSharedKey);
-        if ($key == $privateSharedKey) {
-            $this->logger->write('key matches');
-        } else {
-            $this->logger->write('key does not match');
-        }
-       if ($this->request->isPost()) {
-           $this->logger->write('request is post');
-       }
-
-
 
         // Return the validity check
         return $key == $privateSharedKey

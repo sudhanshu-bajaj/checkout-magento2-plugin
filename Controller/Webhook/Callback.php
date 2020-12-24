@@ -83,8 +83,6 @@ class Callback extends \Magento\Framework\App\Action\Action
      */
     public $scopeConfig;
 
-    public  $logger;
-
     /**
      * Callback constructor
      */
@@ -100,8 +98,7 @@ class Callback extends \Magento\Framework\App\Action\Action
         \CheckoutCom\Magento2\Model\Service\VaultHandlerService $vaultHandler,
         \CheckoutCom\Magento2\Model\Service\PaymentErrorHandlerService $paymentErrorHandler,
         \CheckoutCom\Magento2\Gateway\Config\Config $config,
-        \CheckoutCom\Magento2\Helper\Utilities $utilities,
-        \CheckoutCom\Magento2\Helper\Logger $logger
+        \CheckoutCom\Magento2\Helper\Utilities $utilities
     ) {
         parent::__construct($context);
 
@@ -116,7 +113,6 @@ class Callback extends \Magento\Framework\App\Action\Action
         $this->paymentErrorHandler = $paymentErrorHandler;
         $this->config = $config;
         $this->utilities = $utilities;
-        $this->logger = $logger;
     }
 
     /**
@@ -126,7 +122,7 @@ class Callback extends \Magento\Framework\App\Action\Action
     {
         // Set the payload data
         $this->payload = $this->getPayload();
-        $this->logger->write(json_encode($this->payload));
+
         // Prepare the response handler
         $resultFactory = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
