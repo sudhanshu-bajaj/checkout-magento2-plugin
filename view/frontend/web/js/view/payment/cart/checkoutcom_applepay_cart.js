@@ -441,7 +441,7 @@ require([
                 total: {
                     type: "final",
                     label: window.location.host,
-                    amount: totalInfo.grand_total.toFixed(2),
+                    amount: Utilities.getQuoteValue(),
                 },
             };
         }
