@@ -185,8 +185,8 @@ class PlaceOrder extends \Magento\Framework\App\Action\Action
         $response = $this->methodHandler->get($this->methodId)
         ->sendPaymentRequest(
             $this->data,
-            $order->getGrandTotal(),
-            $order->getOrderCurrencyCode(),
+            $order->getBaseGrandTotal(),
+            $order->getBaseCurrencyCode(),
             $order->getIncrementId()
         );
 

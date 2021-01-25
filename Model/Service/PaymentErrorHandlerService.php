@@ -139,7 +139,7 @@ class PaymentErrorHandlerService
         );
 
         // Get the currency
-        $currency =  $this->orderHandler->getOrderCurrency($this->order);
+        $currency =  $this->orderHandler->getBaseCurrency($this->order);
 
         return $amount . ' ' . $currency;
     }
